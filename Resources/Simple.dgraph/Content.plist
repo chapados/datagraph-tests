@@ -453,6 +453,38 @@
 			<key>Width</key>
 			<real>71</real>
 		</dict>
+		<dict>
+			<key>Digits</key>
+			<integer>5</integer>
+			<key>Name</key>
+			<string>binCol</string>
+			<key>Open</key>
+			<false/>
+			<key>Return Type</key>
+			<integer>1</integer>
+			<key>Show</key>
+			<true/>
+			<key>Type</key>
+			<string>Binary</string>
+			<key>Width</key>
+			<real>71</real>
+		</dict>
+		<dict>
+			<key>Digits</key>
+			<integer>5</integer>
+			<key>Name</key>
+			<string>binCol</string>
+			<key>Open</key>
+			<false/>
+			<key>Return Type</key>
+			<integer>1</integer>
+			<key>Show</key>
+			<true/>
+			<key>Type</key>
+			<string>Binary</string>
+			<key>Width</key>
+			<real>71</real>
+		</dict>
 	</array>
 	<key>Commands</key>
 	<array>
