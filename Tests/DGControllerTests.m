@@ -8,74 +8,83 @@
 
 #import "DGControllerTests.h"
 
-static NSString *emptyPrefix = @"Simple";
+static NSString *simplePrefix = @"Simple";
 static NSString *dgraphExt = @"dgraph";
-static NSString *emptyDgraphFile = @"Simple.dgraph";
+static NSString *simpleDgraphFile = @"Simple.dgraph";
 
 @implementation DGControllerTests
+@synthesize dgc;
+
+- (DGController *) defaultController
+{
+    return [DGController
+            controllerWithFileInBundle:simpleDgraphFile];
+}
+
+- (void) setUp
+{
+    [self setDgc:[self defaultController]];
+}
+
+- (void) tearDown
+{
+    [dgc release], dgc = nil;
+}
 
 - (void) testCreateEmpty
 {
-    DGController *dgc = [DGController createEmpty];
-    GHAssertNotNil(dgc, @"DGController should not be nil");
+    DGController *emptyController = [DGController createEmpty];
+    GHAssertNotNil(emptyController, @"DGController should not be nil");
 }
 
 - (void) testControllerWithContentsOfFile
 {
-    DGController *dgc = [DGController controllerWithContentsOfFile:
+    DGController *controller = [DGController controllerWithContentsOfFile:
                          [TEST_RESOURCES stringByAppendingPathComponent:
-                          emptyDgraphFile]];
-    GHAssertNotNil(dgc, @"DGController should not be nil");
+                          simpleDgraphFile]];
+    GHAssertNotNil(controller, @"DGController should not be nil");
 }
 
 - (void) testControllerWithFileInBundle
 {
-    DGController *dgc = [DGController controllerWithFileInBundle:emptyDgraphFile];
-    GHAssertNotNil(dgc, @"DGController should not be nil");
+    DGController *controller = [DGController controllerWithFileInBundle:simpleDgraphFile];
+    GHAssertNotNil(controller, @"DGController should not be nil");
 }
 
 - (void) testResolveScriptNameInBundle
 {
     NSString *path = [[NSBundle mainBundle]
-                      pathForResource:emptyPrefix ofType:dgraphExt];
+                      pathForResource:simplePrefix ofType:dgraphExt];
     GHAssertEqualObjects(path,
-                         [DGController resolveScriptNameInBundle:emptyPrefix], nil);
+                         [DGController resolveScriptNameInBundle:simplePrefix], nil);
 }
 
 - (void) testScriptName
 {
     DGController *dgcInBundle = [DGController
-                                 controllerWithFileInBundle:emptyDgraphFile];
+                                 controllerWithFileInBundle:simpleDgraphFile];
     DGController *dgcFromFile = [DGController controllerWithContentsOfFile:
                                  [TEST_RESOURCES stringByAppendingPathComponent:
-                                  emptyDgraphFile]];
-    GHAssertEqualObjects(emptyDgraphFile, [dgcInBundle scriptName], nil);
-    GHAssertEqualObjects(emptyDgraphFile, [dgcFromFile scriptName], nil);
+                                  simpleDgraphFile]];
+    GHAssertEqualObjects([dgcInBundle scriptName], simpleDgraphFile, nil);
+    GHAssertEqualObjects([dgcFromFile scriptName], simpleDgraphFile, nil);
 }
 
 #pragma mark -
 #pragma mark Data Columns
 
-- (DGController *) defaultController
-{
-    return [DGController
-            controllerWithFileInBundle:emptyDgraphFile];
-}
-
 - (void) testNumberOfColumns
 {
-    DGController *dgc = [self defaultController];
-    GHAssertEquals([dgc numberOfDataColumns], 4, nil);
+    GHAssertEquals([[self dgc] numberOfDataColumns], 6, nil);
 }
 
 - (void) testDataColumns
 {
-    DGController *dgc = [self defaultController];
-    NSArray *columns = [dgc dataColumns];
+    NSArray *columns = [[self dgc] dataColumns];
     // BRC: #numberOfDataColumns returns int.
     // should return NSUInteger to match the standard return type of Foundation collections
     GHAssertEquals((NSUInteger)[columns count],
-                   (NSUInteger)[dgc numberOfDataColumns], nil);
+                   (NSUInteger)[[self dgc] numberOfDataColumns], nil);
     for ( DGDataColumn *c in columns ) {
         GHAssertTrue([c isKindOfClass:[DGDataColumn class]],
                      @"column should be a DGDataColumn");
@@ -84,23 +93,54 @@ static NSString *emptyDgraphFile = @"Simple.dgraph";
 
 - (void) testDataColumnAtIndex
 {
-    DGController *dgc = [self defaultController];
-    NSUInteger columnCount = [dgc numberOfDataColumns];
+    NSUInteger columnCount = [[self dgc] numberOfDataColumns];
+    NSArray *dataColumns = [[self dgc] dataColumns];
+
     NSUInteger i;
     for ( i = 0; i < columnCount; i++ ) {
-        DGDataColumn *c = [dgc dataColumnAtIndex:i];
+        DGDataColumn *c = [[self dgc] dataColumnAtIndex:i];
         GHAssertNotNil(c, @"column should not be nil");
+        GHAssertEquals(c, [dataColumns objectAtIndex:i], nil);
     }
 }
 
-- (void) testDataColumnWithName
-{
-    DGController *dgc = [self defaultController];
-    
-    DGDataColumn *y1 = [dgc dataColumnAtIndex:2];
-    DGDataColumn *colY = [dgc columnWithName:@"y"];
-    // BRC: should be identical pointers ( == )? or just objects ( -isEqual )? 
-    GHAssertEquals(colY, y1, nil); // pointers
+- (void) testColumnWithName
+{    
+    DGDataColumn *y1 = [[self dgc] dataColumnAtIndex:2];
+    DGDataColumn *colY = [[self dgc] columnWithName:@"y"];
+    GHAssertEquals(colY, y1, nil); // pointer equality
 }
+
+- (void) getColumnWithName:(NSString *)aName
+{
+    tempColumn = [[[self dgc] columnWithName:aName] retain];
+}
+
+- (void) testColumnWithNameOnMainThread
+{
+    DGDataColumn *y1 = [[self dgc] dataColumnAtIndex:2];
+    [self performSelectorOnMainThread:@selector(getColumnWithName:) withObject:@"y" waitUntilDone:YES];
+    DGDataColumn *colY = tempColumn;
+    GHAssertEquals(colY, y1, nil); // pointers
+    [colY release];
+    colY = nil, tempColumn = nil;
+}
+
+- (void) testBinaryColumnWithName
+{    
+    DGDataColumn *binCol1 = [[self dgc] dataColumnAtIndex:4];
+    GHAssertEqualObjects([binCol1 name], @"binCol", nil);
+    DGDataColumn *binCol = [[self dgc] binaryColumnWithName:@"binCol"];
+    GHAssertEquals(binCol, binCol1, nil);
+}
+
+- (void) testAddColumnWithName
+{
+    NSUInteger columnCount = [[self dgc] numberOfDataColumns];
+    DGDataColumn *newCol = [[self dgc] addDataColumnWithName:@"newCol" type:@"Ascii"];
+    GHAssertNotNil(newCol, nil);
+    GHAssertEquals((NSUInteger)[[self dgc] numberOfDataColumns], columnCount+1, nil);
+}
+
 
 @end

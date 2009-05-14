@@ -9,7 +9,9 @@
 #import "DGTestSuite.h"
 
 @interface DGControllerTests : GHTestCase {
-
+    DGController *dgc;
+    DGDataColumn *tempColumn;
 }
+@property (retain) DGController *dgc;
 
 @end
