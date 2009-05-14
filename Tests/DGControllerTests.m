@@ -37,17 +37,19 @@ static NSString *simpleDgraphFile = @"Simple.dgraph";
     GHAssertNotNil(emptyController, @"DGController should not be nil");
 }
 
-- (void) testControllerWithContentsOfFile
+- (void) testControllerFileInBundle
 {
-    DGController *controller = [DGController controllerWithContentsOfFile:
-                         [TEST_RESOURCES stringByAppendingPathComponent:
-                          simpleDgraphFile]];
+    DGController *controller =
+    [DGController controllerWithFileInBundle:simpleDgraphFile];
     GHAssertNotNil(controller, @"DGController should not be nil");
 }
 
-- (void) testControllerWithFileInBundle
+- (void) testControllerWithContentsOfFile
 {
-    DGController *controller = [DGController controllerWithFileInBundle:simpleDgraphFile];
+    NSString *path = [[NSBundle mainBundle]
+                      pathForResource:simplePrefix ofType:dgraphExt];
+    DGController *controller =
+        [DGController controllerWithContentsOfFile:path];
     GHAssertNotNil(controller, @"DGController should not be nil");
 }
 
